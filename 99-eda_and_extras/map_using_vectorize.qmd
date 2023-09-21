@@ -1,0 +1,42 @@
+Make the map without using a `for` loop
+
+```{python}
+dc_map2 = folium.Map(location=dc_coors, zoom_start = 13)
+```
+
+```{python}
+from numpy import vectorize
+
+@vectorize
+def plot_on_map(fmap, lat, lon, radius, color, num_bikes):
+    folium.CircleMarker(
+        location=[lat, lon],
+        radius=radius,
+        color=color,
+        stroke=False,
+        fill=True,
+        fill_opacity=0.6,
+        opacity=1,
+        popup=f"{num_bikes} bikes availiable, radius: {radius}",
+        tooltip=f"{radius} bikes availiable",
+    ).add_to(fmap)
+    
+    return fmap
+```
+
+
+```{python}
+_ = plot_on_map(
+    fmap=dc_map2,
+    lat=dat["lat"],
+    lon=dat["lon"],
+    radius=dat["size"],
+    color=dat["color"],
+    num_bikes=dat["num_bikes_available"]
+)
+```
+
+```{python}
+dc_map2
+```
+

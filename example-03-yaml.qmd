@@ -1,0 +1,101 @@
+---
+title: Capital Bike Share Availability
+subtitle: DC Metro Area Bike Sharing Program
+author: Person Name
+
+format:
+  html:
+    toc: true
+    embed-resources: true
+    anchor-sections: true
+    smooth-scroll: true
+    code-fold: true
+    code-summary: "Show the code"
+    code-tools: true
+    code-block-bg: true
+    code-block-border-left: "#31BAE9"
+    code-line-numbers: true
+    code-copy: true
+
+jupyter: python3
+---
+
+# Introduction
+
+[Capital Bikeshare](https://capitalbikeshare.com/)
+is a bicycle-sharing system in the Washington D.C. Metro Area.
+Data are downloaded using the
+[bikeHelpR](https://github.com/sol-eng/bikeHelpR)
+R package and exported to CSV files.
+
+There are 2 datasets that are combined together:
+
+- `station_info.csv`: provides station coordinates and time data was collected
+- `availability.csv`: is a processed data set that aggregated the number of
+                      available bikes for each station at a particular time
+
+The combined data set, `bike_counts_by_time_location.csv`,
+is saved for any other downstream analysis.
+
+```{python}
+#reticulate::use_virtualenv("./venv/")
+from pathlib import Path
+
+import folium
+import numpy as np
+import pandas as pd
+
+info = pd.read_csv("data/station_info.csv")
+availability = pd.read_csv("data/availability.csv")
+
+dat = availability.merge(info, left_on='station_id', right_on='station_id')
+dat.head()
+
+if not Path("data/bike_counts_by_time_location.csv").exists():
+  dat.to_csv('data/bike_counts_by_time_location.csv', index=False)
+```
+
+# Visualize Bike Availability
+
+We want to know how many bikes are available in each station.
+
+```{python}
+area_scale_factor = 2
+minimum_radius = 3
+
+dat['size'] = (np.sqrt(dat['num_bikes_available']) * area_scale_factor) + minimum_radius
+dat['color'] = dat['num_bikes_available'].apply(lambda x: 'green' if x > 0 else 'red')
+```
+
+```{python}
+# map center
+dc_coors = [38.89511, -77.03637]
+
+# map
+dc_map = folium.Map(location=dc_coors, zoom_start = 13)
+```
+
+Legend:
+
+- Green: has availability
+- Red: has no availability
+
+Size of circles correspond to how many bikes are available at each station
+
+```{python}
+for _, bike_station in dat.iterrows():
+    folium.CircleMarker(
+        location=[bike_station["lat"], bike_station["lon"]],
+        radius=bike_station["size"],
+        color=bike_station["color"],
+        stroke=False,
+        fill=True,
+        fill_opacity=0.6,
+        opacity=1,
+        popup=f"{bike_station['num_bikes_available']} bikes available, radius: {bike_station['size']}",
+        tooltip=f"{bike_station['num_bikes_available']} bikes available",
+    ).add_to(dc_map)
+
+# map displays on render
+dc_map
+```

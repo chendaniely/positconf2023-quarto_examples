@@ -1,0 +1,65 @@
+---
+jupyter: python3
+---
+
+```r
+# notes
+reticulate::use_virtualenv('~/git/rstudio/quarto-intro_examples/venv')
+```
+
+```{python}
+import pandas as pd
+import plotnine as p9
+from plotnine import ggplot, aes
+
+import numpy as np
+
+dat = pd.read_csv('data/bike_counts_by_time_location.csv')
+dat.head()
+```
+```{python}
+dat['hour'].value_counts()
+```
+
+```{python}
+station_counts = (
+    dat
+    .groupby("station_id")
+    .agg({"num_bikes_available": "sum"})
+    .reset_index()
+    .sort_values(by="num_bikes_available", ascending=False)
+)
+```
+
+
+```{python}
+# Determine order and create a categorical type
+# Note that value_counts() is already sorted
+
+station_counts_cat = pd.Categorical(station_counts['station_id'], categories=station_counts['station_id'].to_list(), ordered=True)
+
+# assign to a new column in the DataFrame
+station_counts['station_counts_cat'] = station_counts_cat
+
+
+ggplot(station_counts, aes(x='station_counts_cat', y='num_bikes_available')) + p9.geom_bar(stat='identity') + p9.coord_flip()
+```
+
+```{python}
+ggplot(dat, aes(y='lat', x='lon', size='num_bikes_available')) + p9.geom_point()
+```
+
+
+
+```{python}
+bike_station = dat.iloc[0]
+```
+
+```{python}
+del bike_station
+for bike_station in dat.iterrows():
+  bike_station = bike_station[1]
+  break
+
+bike_station
+```

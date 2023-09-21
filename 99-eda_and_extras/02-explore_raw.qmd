@@ -1,0 +1,29 @@
+Run the `01-get_data.R` to get the data into the `data/` directory.
+
+# Load data
+
+```{python}
+import pandas as pd
+
+info = pd.read_csv("data/station_info.csv")
+status = pd.read_csv("data/station_status.csv")
+```
+
+```{python}
+info.head()
+```
+
+```{python}
+status.head()
+```
+
+Status has a bit more columns, so let's look at the `.info()`
+
+```{python}
+status.info()
+```
+
+```{python}
+status['time'].value_counts()
+```
+
